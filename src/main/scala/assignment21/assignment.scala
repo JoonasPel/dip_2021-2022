@@ -43,20 +43,52 @@ import scala.collection.immutable.Range
 object assignment  {
   // Suppress the log messages:
   Logger.getLogger("org").setLevel(Level.OFF)
-                       
   
-  val spark = ???
+  val spark = SparkSession.builder()
+	                        .appName("assignment")
+                          .config("spark.driver.host", "localhost")
+                          .master("local")
+                          .getOrCreate()
+                          
+  //spark.conf.set("spark.sql.shuffle.partitions", "5")
+                          
+  // poista inferschema ja tilalle manuaalisti schemat = tehokkaampi                         
                           
   val dataK5D2 =  spark.read
-                       .???
+                       .option("inferSchema", true)
+                       .option("header", true)
                        .csv("data/dataK5D2.csv")
 
   val dataK5D3 =  spark.read
-                       .???
+                       .option("inferSchema", "true")
+                       .option("header", true)
                        .csv("data/dataK5D3.csv")
+                       
+  //dataK5D2.show()
+  //dataK5D2.printSchema()
 
   def task1(df: DataFrame, k: Int): Array[(Double, Double)] = {
-    ???
+    // create vectorassembler
+    val vectorAssembler = new VectorAssembler()
+    .setInputCols(Array("a","b"))
+    .setOutputCol("features")
+    // create df with features
+    val transformedDF = vectorAssembler.transform(df)
+    
+    //transformedDF.show()
+    
+    val kmeans = new KMeans()
+    .setK(k).setSeed(1L)   
+    val kmModel = kmeans.fit(transformedDF)
+    
+    //kmModel.summary.predictions.show(1000, false)   
+    //kmModel.clusterCenters.foreach(println)  
+    
+    val centers = kmModel.clusterCenters
+    println(centers) 
+
+      
+    return Array()
   }
 
   def task2(df: DataFrame, k: Int): Array[(Double, Double, Double)] = {
