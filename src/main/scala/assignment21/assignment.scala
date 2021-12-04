@@ -25,6 +25,7 @@ import org.apache.spark.streaming.{Seconds, StreamingContext}
 
 
 import org.apache.spark.ml.feature.VectorAssembler
+import org.apache.spark.ml.feature.MinMaxScaler
 import org.apache.spark.ml.Pipeline
 import org.apache.spark.ml.clustering.{KMeans, KMeansSummary}
 
@@ -71,17 +72,22 @@ object assignment  {
     // create vectorassembler
     val vectorAssembler = new VectorAssembler()
     .setInputCols(Array("a","b"))
-    .setOutputCol("features")
+    .setOutputCol("preFeatures")
     // create df with features
     val transformedDF = vectorAssembler.transform(df)
     
-    //transformedDF.show()
+    // scaler
+    val scaler = new MinMaxScaler()
+    .setInputCol("preFeatures")
+    .setOutputCol("features")  
+    val scalerModel = scaler.fit(transformedDF)   
+    val scaledData = scalerModel.transform(transformedDF)
     
+    // clustering, k-means
     val kmeans = new KMeans()
     .setK(k).setSeed(1L)   
-    val kmModel = kmeans.fit(transformedDF)
+    val kmModel = kmeans.fit(scaledData)
     
- 
     val centers = kmModel.clusterCenters
     val t1 = (centers(0)(0),centers(0)(1))
     val t2 = (centers(1)(0),centers(1)(1))
@@ -90,7 +96,8 @@ object assignment  {
     val t5 = (centers(4)(0),centers(4)(1))
     val x = Array(t1,t2,t3,t4,t5);
 
-      
+    kmModel.summary.predictions.show(1000, false)
+    
     return x
   }
 
