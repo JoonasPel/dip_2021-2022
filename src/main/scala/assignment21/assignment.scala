@@ -64,8 +64,8 @@ object assignment  {
                        .option("header", true)
                        .csv("data/dataK5D3.csv")
                        
-  //dataK5D2.show()
-  //dataK5D2.printSchema()
+  dataK5D2.show()
+  dataK5D2.printSchema()
 
   def task1(df: DataFrame, k: Int): Array[(Double, Double)] = {
     // create vectorassembler
@@ -81,14 +81,17 @@ object assignment  {
     .setK(k).setSeed(1L)   
     val kmModel = kmeans.fit(transformedDF)
     
-    //kmModel.summary.predictions.show(1000, false)   
-    //kmModel.clusterCenters.foreach(println)  
-    
+ 
     val centers = kmModel.clusterCenters
-    println(centers) 
+    val t1 = (centers(0)(0),centers(0)(1))
+    val t2 = (centers(1)(0),centers(1)(1))
+    val t3 = (centers(2)(0),centers(2)(1))
+    val t4 = (centers(3)(0),centers(3)(1))
+    val t5 = (centers(4)(0),centers(4)(1))
+    val x = Array(t1,t2,t3,t4,t5);
 
       
-    return Array()
+    return x
   }
 
   def task2(df: DataFrame, k: Int): Array[(Double, Double, Double)] = {
