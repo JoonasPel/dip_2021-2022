@@ -88,6 +88,7 @@ object assignment  {
     .setK(k).setSeed(1L)   
     val kmModel = kmeans.fit(scaledData)
     
+    //centers to array
     val centers = kmModel.clusterCenters
     val t1 = (centers(0)(0),centers(0)(1))
     val t2 = (centers(1)(0),centers(1)(1))
@@ -95,14 +96,40 @@ object assignment  {
     val t4 = (centers(3)(0),centers(3)(1))
     val t5 = (centers(4)(0),centers(4)(1))
     val x = Array(t1,t2,t3,t4,t5);
-
-    kmModel.summary.predictions.show(1000, false)
     
     return x
   }
 
   def task2(df: DataFrame, k: Int): Array[(Double, Double, Double)] = {
-    ???
+    // create vectorassembler
+    val vectorAssembler = new VectorAssembler()
+    .setInputCols(Array("a","b", "c"))
+    .setOutputCol("preFeatures")
+    // create df with features
+    val transformedDF = vectorAssembler.transform(df)
+    
+    // scaler
+    val scaler = new MinMaxScaler()
+    .setInputCol("preFeatures")
+    .setOutputCol("features")  
+    val scalerModel = scaler.fit(transformedDF)   
+    val scaledData = scalerModel.transform(transformedDF)
+    
+    // clustering, k-means
+    val kmeans = new KMeans()
+    .setK(k).setSeed(1L)   
+    val kmModel = kmeans.fit(scaledData)
+    
+    //centers to array
+    val centers = kmModel.clusterCenters
+    val t1 = (centers(0)(0),centers(0)(1),centers(0)(2))
+    val t2 = (centers(1)(0),centers(1)(1),centers(1)(2))
+    val t3 = (centers(2)(0),centers(2)(1),centers(2)(2))
+    val t4 = (centers(3)(0),centers(3)(1),centers(3)(2))
+    val t5 = (centers(4)(0),centers(4)(1),centers(4)(2))
+    val x = Array(t1,t2,t3,t4,t5);
+    
+    return x
   }
 
   def task3(df: DataFrame, k: Int): Array[(Double, Double)] = {
