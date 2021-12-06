@@ -190,19 +190,20 @@ object assignment  {
     
    var nums = new ListBuffer[(Int, Double)]
    
+    // trying the clusters with 2-10 and computing the cost
+    // saving results in to listbuffer
    for (i <- low to high)
    {
      val kmeans = new KMeans()
     .setK(i).setSeed(1L)   
     val kmModel = kmeans.fit(scaledData)
     val cost = kmModel.computeCost(scaledData)
-//    println("i :",i,"cost:",cost)
     nums.+=((i,cost))
     
    }
-    
-    nums.foreach(println)
-    return Array()
+    //converting listbuffer to array
+    val arr = nums.toArray
+    return arr
   }
      
   
