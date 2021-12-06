@@ -3,7 +3,7 @@ package assignment21
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.functions.{window, column, desc, col}
 
-
+import scala.collection.mutable.ListBuffer
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.Column
 import org.apache.spark.sql.Row
@@ -172,11 +172,43 @@ object assignment  {
 
   // Parameter low is the lowest k and high is the highest one.
   def task4(df: DataFrame, low: Int, high: Int): Array[(Int, Double)]  = {
-    ???
+   
+     // create vectorassembler
+    val vectorAssembler = new VectorAssembler()
+    .setInputCols(Array("a","b"))
+    .setOutputCol("preFeatures")
+    // create df with features
+    val transformedDF = vectorAssembler.transform(df)
+    
+    // scaler
+    val scaler = new MinMaxScaler()
+    .setInputCol("preFeatures")
+    .setOutputCol("features")  
+    val scalerModel = scaler.fit(transformedDF)   
+    val scaledData = scalerModel.transform(transformedDF)
+    
+    
+   var nums = new ListBuffer[(Int, Double)]
+   
+   for (i <- low to high)
+   {
+     val kmeans = new KMeans()
+    .setK(i).setSeed(1L)   
+    val kmModel = kmeans.fit(scaledData)
+    val cost = kmModel.computeCost(scaledData)
+//    println("i :",i,"cost:",cost)
+    nums.+=((i,cost))
+    
+   }
+    
+    nums.foreach(println)
+    return Array()
   }
      
   
-    
+   
+  
+  
 }
 
 
