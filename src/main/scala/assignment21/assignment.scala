@@ -32,6 +32,10 @@ import org.apache.spark.ml.clustering.{KMeans, KMeansSummary}
 
 import java.io.{PrintWriter, File}
 
+import breeze.linalg._
+import breeze.numerics._
+import breeze.plot._ 
+
 
 //import java.lang.Thread
 import sys.process._
@@ -180,8 +184,7 @@ object assignment  {
   }
 
   // Parameter low is the lowest k and high is the highest one.
-  def task4(df: DataFrame, low: Int, high: Int): Array[(Int, Double)]  = {
-   
+  def task4(df: DataFrame, low: Int, high: Int): Array[(Int, Double)]  = {   
      // create vectorassembler
     val vectorAssembler = new VectorAssembler()
     .setInputCols(Array("a","b"))
@@ -195,27 +198,40 @@ object assignment  {
     .setOutputCol("features")  
     val scalerModel = scaler.fit(transformedDF)   
     val scaledData = scalerModel.transform(transformedDF)
+       
+    // trying the clusters with low to high and computing the cost
+    // saving results into results array for returning
+    // and to cost/cluster arrays for visualization
+    val results = new Array[(Int, Double)](high-low+1)
+    val costArray = new Array[Double](high-low+1)
+    val clusterArray = new Array[Double](high-low+1)
+    for (i <- low to high)
+    {
+      val kmeans = new KMeans()
+      .setK(i).setSeed(1L)   
+      val kmModel = kmeans.fit(scaledData)
+      val cost = kmModel.computeCost(scaledData)
+      
+      results(i-low) = (i, cost)
+      costArray(i-low) = cost
+      clusterArray(i-low) = i
+    }
     
+    // visualize Elbow
+    val costVector = new DenseVector(costArray)
+    val clusterVector = new DenseVector(clusterArray)
+    val f = Figure()
+    val p = f.subplot(0)
+    p += plot(clusterVector, costVector) 
+    p.xlabel = "Clusters"
+    p.ylabel = "Cost"
+       
+    println("Press Enter(in console) to close graph and continue")
+    scala.io.StdIn.readLine()
     
-   var nums = new ListBuffer[(Int, Double)]
-   
-    // trying the clusters with 2-10 and computing the cost
-    // saving results in to listbuffer
-   for (i <- low to high)
-   {
-     val kmeans = new KMeans()
-    .setK(i).setSeed(1L)   
-    val kmModel = kmeans.fit(scaledData)
-    val cost = kmModel.computeCost(scaledData)
-    nums.+=((i,cost))
-    
-   }
-    //converting listbuffer to array
-    val arr = nums.toArray
-    return arr
+    return results
   }
-     
-   
+        
 }
 
 
