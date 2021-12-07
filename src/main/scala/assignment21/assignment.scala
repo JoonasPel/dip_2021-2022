@@ -98,16 +98,15 @@ object assignment  {
     .setK(k).setSeed(1L)   
     val kmModel = kmeans.fit(scaledData)
     
-    //centers to array
+    //centers to array of Doubles
     val centers = kmModel.clusterCenters
-    val t1 = (centers(0)(0),centers(0)(1))
-    val t2 = (centers(1)(0),centers(1)(1))
-    val t3 = (centers(2)(0),centers(2)(1))
-    val t4 = (centers(3)(0),centers(3)(1))
-    val t5 = (centers(4)(0),centers(4)(1))
-    val x = Array(t1,t2,t3,t4,t5)
-    
-    return x
+    val arrayOfClusters = new Array[(Double, Double)](k)  
+    for(cl <- 0 to k-1)
+      {
+       arrayOfClusters(cl) = (centers(cl)(0),centers(cl)(1))
+      }
+
+    return arrayOfClusters
   }
 
   def task2(df: DataFrame, k: Int): Array[(Double, Double, Double)] = {
@@ -130,16 +129,15 @@ object assignment  {
     .setK(k).setSeed(1L)   
     val kmModel = kmeans.fit(scaledData)
     
-    //centers to array
-    val centers = kmModel.clusterCenters
-    val t1 = (centers(0)(0),centers(0)(1),centers(0)(2))
-    val t2 = (centers(1)(0),centers(1)(1),centers(1)(2))
-    val t3 = (centers(2)(0),centers(2)(1),centers(2)(2))
-    val t4 = (centers(3)(0),centers(3)(1),centers(3)(2))
-    val t5 = (centers(4)(0),centers(4)(1),centers(4)(2))
-    val x = Array(t1,t2,t3,t4,t5)
-    
-    return x
+    //centers to array of Doubles
+    val centers = kmModel.clusterCenters    
+    val arrayOfClusters = new Array[(Double, Double, Double)](k)  
+    for(cl <- 0 to k-1)
+      {
+       arrayOfClusters(cl) = (centers(cl)(0),centers(cl)(1),centers(cl)(2))
+      }
+        
+    return arrayOfClusters
   }
 
   def task3(df: DataFrame, k: Int): Array[(Double, Double)] = {  
@@ -167,18 +165,17 @@ object assignment  {
     
     //centers to array
     val centers = kmModel.clusterCenters
-    val t1 = (centers(0)(0),centers(0)(1),centers(0)(2))
-    val t2 = (centers(1)(0),centers(1)(1),centers(1)(2))
-    val t3 = (centers(2)(0),centers(2)(1),centers(2)(2))
-    val t4 = (centers(3)(0),centers(3)(1),centers(3)(2))
-    val t5 = (centers(4)(0),centers(4)(1),centers(4)(2))
-    val x = Array(t1,t2,t3,t4,t5)
+    val arrayOfClusters = new Array[(Double, Double, Double)](k)  
+    for(cl <- 0 to k-1)
+      {
+       arrayOfClusters(cl) = (centers(cl)(0),centers(cl)(1),centers(cl)(2))
+      }
     
-    // sort arrays by z value, closer to zero means more fatal. take two first
-    val sortedArray = x.sortBy(_._3)    
+    // sort arrays by z value, closer to zero means more fatal. take two first and only x,y coordinates
+    val sortedArray = arrayOfClusters.sortBy(_._3)    
     val fatalCenters = Array(sortedArray(0), sortedArray(1))
     val fatalCentersXY2 = Array((fatalCenters(0)._1, fatalCenters(0)._2), (fatalCenters(1)._1, fatalCenters(1)._2))
-        
+    
     return fatalCentersXY2
   }
 
