@@ -9,7 +9,7 @@ import org.apache.spark.sql.Column
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.types.StructType
-import org.apache.spark.sql.types.{ArrayType, StringType, StructField, IntegerType}
+import org.apache.spark.sql.types.{ArrayType, StringType, StructField, IntegerType, DoubleType}
 import org.apache.spark.sql.types.DataType
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.functions.{count, sum, min, max, asc, desc, udf, to_date, avg}
@@ -53,19 +53,31 @@ object assignment  {
                           
   //spark.conf.set("spark.sql.shuffle.partitions", "5")
                           
-  // poista inferschema ja tilalle manuaalisti schemat = tehokkaampi                         
-                          
+  //create schemas to improve performance by not using inferSchema
+  val D2schema = StructType(Array(
+      StructField("a", DoubleType, true),
+      StructField("b", DoubleType, true),
+      StructField("LABEL", StringType, true)
+      ))
+  val D3schema = StructType(Array(
+      StructField("a", DoubleType, true),
+      StructField("b", DoubleType, true),
+      StructField("c", DoubleType, true),
+      StructField("LABEL", StringType, true)
+      ))
+                                                  
   val dataK5D2 =  spark.read
-                       .option("inferSchema", true)
                        .option("header", true)
+                       .schema(D2schema)
                        .csv("data/dataK5D2.csv")
 
   val dataK5D3 =  spark.read
-                       .option("inferSchema", "true")
                        .option("header", true)
-                       .csv("data/dataK5D3.csv")
+                       .schema(D3schema)
+                       .csv("data/dataK5D3.csv")                      
                        
 
+                       
   def task1(df: DataFrame, k: Int): Array[(Double, Double)] = {
     // create vectorassembler
     val vectorAssembler = new VectorAssembler()
@@ -206,10 +218,7 @@ object assignment  {
     return arr
   }
      
-  
    
-  
-  
 }
 
 
