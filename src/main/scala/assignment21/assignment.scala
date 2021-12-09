@@ -23,12 +23,12 @@ import org.apache.spark.streaming.{Seconds, StreamingContext}
 
 import org.apache.spark.sql.functions.when
 
-
+import org.apache.spark.ml.feature.ElementwiseProduct
+import org.apache.spark.ml.feature.StandardScaler
 import org.apache.spark.ml.feature.VectorAssembler
 import org.apache.spark.ml.feature.MinMaxScaler
 import org.apache.spark.ml.Pipeline
 import org.apache.spark.ml.clustering.{KMeans, KMeansSummary}
-
 
 import java.io.{PrintWriter, File}
 
@@ -101,16 +101,11 @@ object assignment  {
     val kmeans = new KMeans()
     .setK(k).setSeed(1L)   
     val kmModel = kmeans.fit(scaledData)
-    
-    //centers to array of Doubles
-    val centers = kmModel.clusterCenters
-    val arrayOfClusters = new Array[(Double, Double)](k)  
-    for(cl <- 0 to k-1)
-      {
-       arrayOfClusters(cl) = (centers(cl)(0),centers(cl)(1))
-      }
 
-    return arrayOfClusters
+    //centers to array of Doubles 
+    val centers = kmModel.clusterCenters.map(m => (m(0), m(1)))
+
+    return centers
   }
 
   def task2(df: DataFrame, k: Int): Array[(Double, Double, Double)] = {
@@ -134,14 +129,9 @@ object assignment  {
     val kmModel = kmeans.fit(scaledData)
     
     //centers to array of Doubles
-    val centers = kmModel.clusterCenters    
-    val arrayOfClusters = new Array[(Double, Double, Double)](k)  
-    for(cl <- 0 to k-1)
-      {
-       arrayOfClusters(cl) = (centers(cl)(0),centers(cl)(1),centers(cl)(2))
-      }
+    val centers = kmModel.clusterCenters.map(m => (m(0), m(1), m(2)))
         
-    return arrayOfClusters
+    return centers
   }
 
   def task3(df: DataFrame, k: Int): Array[(Double, Double)] = {  
@@ -168,15 +158,10 @@ object assignment  {
     val kmModel = kmeans.fit(scaledData)
     
     //centers to array
-    val centers = kmModel.clusterCenters
-    val arrayOfClusters = new Array[(Double, Double, Double)](k)  
-    for(cl <- 0 to k-1)
-      {
-       arrayOfClusters(cl) = (centers(cl)(0),centers(cl)(1),centers(cl)(2))
-      }
+    val centers = kmModel.clusterCenters.map(m => (m(0), m(1), m(2)))
     
     // sort arrays by z value, closer to zero means more fatal. take two first and only x,y coordinates
-    val sortedArray = arrayOfClusters.sortBy(_._3)    
+    val sortedArray = centers.sortBy(_._3)    
     val fatalCenters = Array(sortedArray(0), sortedArray(1))
     val fatalCentersXY2 = Array((fatalCenters(0)._1, fatalCenters(0)._2), (fatalCenters(1)._1, fatalCenters(1)._2))
     
@@ -185,7 +170,7 @@ object assignment  {
 
   // Parameter low is the lowest k and high is the highest one.
   def task4(df: DataFrame, low: Int, high: Int): Array[(Int, Double)]  = {   
-     // create vectorassembler
+    // create vectorassembler
     val vectorAssembler = new VectorAssembler()
     .setInputCols(Array("a","b"))
     .setOutputCol("preFeatures")
@@ -226,10 +211,48 @@ object assignment  {
     p.xlabel = "Clusters"
     p.ylabel = "Cost"
        
-    println("Press Enter(in console) to close graph and continue")
-    scala.io.StdIn.readLine()
+    // Wait 2sec to show the graph to user and then continue
+    Thread.sleep(2000)
     
     return results
+  }
+  
+  // This is for bonus task 6. works like task 1 but rescales centers back and prints them
+  def bonustask6(df: DataFrame, k: Int){
+    // create vectorassembler
+    val vectorAssembler = new VectorAssembler()
+    .setInputCols(Array("a","b"))
+    .setOutputCol("preFeatures")
+    // create df with features
+    val transformedDF = vectorAssembler.transform(df)
+    
+    // scaler
+    // Use StandardScaler not MinMaxScaler because it's (maybe) better for rescaling centers back
+    val scaler = new StandardScaler()
+    .setInputCol("preFeatures")
+    .setOutputCol("features")
+    .setWithStd(true)
+    .setWithMean(false)
+    val scalerModel = scaler.fit(transformedDF)
+    val scaledData = scalerModel.transform(transformedDF)
+    
+    // clustering, k-means
+    val kmeans = new KMeans()
+    .setK(k).setSeed(1L)   
+    val kmModel = kmeans.fit(scaledData)
+    
+    // scaling clusters back to original
+    val backScaler = new ElementwiseProduct()
+    .setScalingVec(scalerModel.std)
+    .setOutputCol("rescaled")
+    .setInputCol("_1")   
+    val centers = kmModel.clusterCenters.zipWithIndex
+    val centersParal = spark.sparkContext.parallelize(centers)
+    val centersDF = spark.createDataFrame(centersParal)  
+    val centersScaledBack = backScaler.transform(centersDF)
+    // prints centers
+    centersScaledBack.select("rescaled").collect.foreach(f=>println(f(0)))
+    
   }
         
 }

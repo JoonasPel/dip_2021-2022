@@ -54,4 +54,13 @@ class DIP21TestSuite extends FunSuite with BeforeAndAfterAll {
     val v = task4(dataK5D2, 2, 10)
     assert(v.length == 9, "Did not return 9 measures")
   }
+  
+  // Calls bonustask6 function which scales centers back and prints them.
+  // Uses same data and cluster amount as task 1.
+  test("BT6 test") {
+    assert(initializeAssignment21(), "Something is wrong with your assignment object")
+    import assignment._
+    bonustask6(dataK5D2, 5)
+  }
+
 }
